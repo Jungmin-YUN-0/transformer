@@ -1,2 +1,11 @@
 # transformer-update-
 transformer (updated version)
+
+
+	
+[설치필요]
+
+ python -m spacy download en_core_web_sm
+
+ python -m spacy download en_core_web_sm
+ python -m spacy download de_core_news_sm
