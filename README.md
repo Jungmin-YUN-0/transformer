@@ -12,14 +12,10 @@ transformer (updated version)
 
 
 [실행]
-1. preprocess.py
+1. DATA PREPROCESSING
  
 	 python preprocess.py -data_dir wmt16 -data_ext csv -data_pkl data.pickle
 
-2. train.py
-
+2. MAIN (TASK: TRAIN, TEST)
 	python main.py -gpu 1 -option transformer -task train
-
-3. test.py
-
 	python main.py -gpu 1 -option transformer -task test
