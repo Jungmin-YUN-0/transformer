@@ -17,5 +17,7 @@ transformer (updated version)
 	 python preprocess.py -data_dir wmt16 -data_ext csv -data_pkl data.pickle
 
 2. MAIN (TASK: TRAIN, TEST)
+
 	python main.py -gpu 1 -option transformer -task train
+	
 	python main.py -gpu 1 -option transformer -task test
