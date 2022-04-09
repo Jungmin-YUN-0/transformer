@@ -14,9 +14,12 @@ transformer (updated version)
 [실행]
 1. preprocess.py
  
- python preprocess.py -data_dir wmt16 -data_ext csv -data_pkl data.pickle
+	 python preprocess.py -data_dir wmt16 -data_ext csv -data_pkl data.pickle
 
 2. train.py
 
+	python train.py -gpu 1 -opt transformer
 
 3. test.py
+
+	python test.py -gpu 1 -opt transformer
