@@ -18,8 +18,8 @@ transformer (updated version)
 
 2. train.py
 
-	python train.py -gpu 1 -opt transformer
+	python main.py -gpu 1 -option transformer -task train
 
 3. test.py
 
-	python test.py -gpu 1 -opt transformer
+	python main.py -gpu 1 -option transformer -task test
