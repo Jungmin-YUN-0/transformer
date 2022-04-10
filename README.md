@@ -18,4 +18,6 @@ transformer (updated version)
 
 2. MAIN (TASK: TRAIN, TEST)
 
-	python main.py -gpu 1 -option [base / l_r / c_t 중에서 선택] -task [train / test 중에서 선택]	
+	python main.py -gpu 1 -option [BASE / LR / CT 중에서 선택] -task [TRAIN / TEST 중에서 선택]	
+	
+	LR is for low-rank attention, CT is for core-token attention
