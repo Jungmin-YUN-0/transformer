@@ -20,4 +20,4 @@ transformer (updated version)
 
 	python main.py -gpu 1 -option [BASE / LR / CT 중에서 선택] -task [TRAIN / TEST 중에서 선택]	
 	
-	LR is for low-rank attention, CT is for core-token attention
+	(LR is for low-rank attention, CT is for core-token attention)
