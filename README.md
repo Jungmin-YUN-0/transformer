@@ -16,7 +16,7 @@ transformer (updated version)
  
 	 python preprocess.py -data_task [MT / CF] -data_dir [wmt16 / imdb] -data_ext csv -data_pkl [data_wmt16.pickle / data_imdb.pickle]
 	 
-	 MT is machine translation, CF is classification
+	 (MT is machine translation, CF is classification)
 
 2. MAIN (TASK: TRAIN, TEST)
 
