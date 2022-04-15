@@ -4,18 +4,22 @@ from test import Test
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-gpu', required=True, help="# of gpu")
-parser.add_argument('-option', required=True, help="Transformer / linformer / mixture model ")
-parser.add_argument('-task', required=True, help="train / test ")
+#parser.add_argument('-gpu', required=True, default="1", help="# of gpu")
+#parser.add_argument('-option', required=True, default='BASE', help="BASE / LR / CT ")
+#parser.add_argument('-task', required=True, default='TRAIN', help="TRAIN / TEST ")
+parser.add_argument('-gpu', default="0", help="# of gpu")
+parser.add_argument('-option', default='LR', help="BASE / LR / CT ")
+parser.add_argument('-task',  default='TEST', help="TRAIN / TEST ")
+parser.add_argument('-data_task', help="task of dataset" )
 
-parser.add_argument('-data_pkl', default="data.pickle", help="file name of preprocessed data(pickle file)")
-parser.add_argument('-model_save', default="transformer_e2g.pt", help="name of saved(updated) model")
-parser.add_argument('-pred_save', default="pred.txt", help="name of file containing prediction result")
+parser.add_argument('-data_pkl', default="data_wmt16.pickle", help="file name of preprocessed data(pickle file)")
+parser.add_argument('-model_save', default="transformer_LR.pt", help="name of saved(updated) model")
+parser.add_argument('-pred_save', default="pred_LR.txt", help="name of file containing prediction result")
 
-parser.add_argument('-batch_size', default=64, type=int, help="batch size")
+parser.add_argument('-batch_size', default=32, type=int, help="batch size")
 parser.add_argument('-n_epoch', default=50, type=int, help="# of epoch")
-parser.add_argument('-learning_rate', default=1e-4, type=int, help="learning rate")
-parser.add_argument('-num_warmup', default=8000, type=int, help="# of warmup (about learning rate)")
+parser.add_argument('-learning_rate', default=1e-4, type=float, help="learning rate") #1e-5 for test
+parser.add_argument('-num_warmup', default=4000, type=int, help="# of warmup (about learning rate)") # 2000으로 test (transformer_lr1e-3_64.pt)
 
 parser.add_argument('-hidden_dim', type=int, default= 512, help="hidden dimension(=d_model")
 parser.add_argument('-n_layer', type=int, default=  6, help="# of encoder&decoder layer")
@@ -29,6 +33,7 @@ opt = parser.parse_args()
 gpu = opt.gpu
 option = opt.option
 task = opt.task
+data_task = opt.data_task
 batch_size = opt.batch_size
 n_epoch = opt.n_epoch
 data_pkl = opt.data_pkl
@@ -43,7 +48,7 @@ dropout = opt.dropout
 
 pred_save = opt.pred_save
 #==========================================#
-if task == "train":
-    Train(gpu, opt, batch_size, n_epoch, data_pkl, model_save, learning_rate, num_warmup, hidden_dim, n_layer, n_head, ff_dim, dropout)
-if task == "test":
-    Test(gpu, opt, data_pkl, model_save, pred_save, hidden_dim, n_layer, n_head, ff_dim, dropout)
+if task == "TRAIN":
+    Train(gpu, option, batch_size, n_epoch, data_pkl, model_save, learning_rate, num_warmup, hidden_dim, n_layer, n_head, ff_dim, dropout, data_task)
+if task == "TEST":
+    Test(gpu, option, data_pkl, model_save, pred_save, hidden_dim, n_layer, n_head, ff_dim, dropout)
