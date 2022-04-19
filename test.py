@@ -10,7 +10,7 @@ import argparse
 import wandb
 import torch.nn.functional as F
 from sklearn.metrics import classification_report
-
+from sklearn.metrics import f1_score
 
 class Test():
     def __init__(self, gpu, opt, batch_size, data_pkl, model_save, pred_save, hidden_dim, n_layer, n_head, ff_dim, dropout, data_task):
@@ -109,9 +109,6 @@ class Test():
                         pred_seq = translator.translate_sentence(src_seq_ext.to(device)) #!#
                         #pred_seq = translator.translate_sentence(torch.LongTensor([src_seq]).to(device))  
                         #print(pred_seq)
-                        #print("#")
-                        #print("#")
-                        #print("#")
 
                         pred_line = ' '.join(TRG.vocab.itos[idx] for idx in pred_seq)
                         pred_line = pred_line.replace("<sos>", '').replace("<unk>", '').replace("<eos>", '')
@@ -152,27 +149,14 @@ class Test():
                         pred_class = pred.argmax(dim=-1)
                         correct_pred = pred_class.eq(target).sum()
                         accuracy = correct_pred / pred.shape[0]
-
                         epoch_accuracy += accuracy.item()
-
-                        from sklearn.metrics import f1_score
                         f1_score = f1_score(target.cpu(), pred_class.cpu())
                         
-                        
-                #predictions = torch.stack(predictions).cpu()
-                #prediction_probs = torch.stack(prediction_probs).cpu()
-                #real_values = torch.stack(real_values).cpu()
-                #return review_texts, predictions, prediction_probs, real_values
                 return epoch_accuracy / len(iterator), f1_score
-
-            #pred, predicted_prob = get_predictions(model, test_iterator, device)
-            #print(pred, predicted_prob)
+            
             acc, f1_score = get_predictions(model, test_iterator, device)
             print(f"accuracy: {acc}")
             print(f"f1_score: {f1_score}")
-            #y_review_texts, y_pred, y_pred_probs, y_test = get_predictions(model, test_iterator, device)
-            #class_names = ['negative','positive']
-            #print(classification_report(y_test, y_pred, target_names=class_names))
 ##################################################################################################################
 
 if __name__ == "__main__":
