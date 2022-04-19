@@ -50,15 +50,11 @@ class Train():
                 n_word = non_pad_mask.sum().item()
                 return loss, n_correct, n_word    
 
-            #############################
-            # model training (per epoch)# 
-            #############################
+            # model training (per epoch)
             def train(model, iterator, optimizer, device, SRC_PAD_IDX, TRG_PAD_IDX, criterion, data):
                 model.train() # 학습 모드
                 total_loss, n_word_total, n_word_correct = 0, 0, 0 
-                
-                ####
-
+           
                 for idx,batch in enumerate(tqdm(iterator)):  ##leave=False
                     # prepare data
                     #src_tensor = torch.zeros(512, dtype=torch.long) #src_max_len = 512
@@ -94,9 +90,8 @@ class Train():
                 
                 return loss_per_word, accuracy
 
-            ###############################
-            # model evaluation (per epoch)# 
-            ###############################
+            
+            # model evaluation (per epoch)
             def evaluate(model, iterator, device, SRC_PAD_IDX, TRG_PAD_IDX, criterion):
                 model.eval() # 평가 모드
                 total_loss, n_word_total, n_word_correct = 0, 0, 0
@@ -119,9 +114,6 @@ class Train():
                 accuracy = n_word_correct/n_word_total
                 return loss_per_word, accuracy
 
-            ###############
-            # start train #
-            ###############
             def start_train(model, train_iterator, valid_iterator, optimizer, device, N_EPOCHS, criterion):
                 def print_performances(header, accu, start_time, loss):
                     print('  - {header:12}  accuracy: {accu:3.3f} %, loss: {loss:3.3f} '\
@@ -146,7 +138,6 @@ class Train():
                         torch.save(model.state_dict(), saved_model)
                         print(f'[Info] Model has been updated - epoch: {epoch}')
 
-                
                     wandb.log({"train_loss": train_loss})
                     wandb.log({"valid_loss": valid_loss})
                     wandb.log({"train_accuracy": train_accu})   
@@ -162,19 +153,12 @@ class Train():
                 epoch_losses = 0
                 epoch_accs = 0
 
-                #num_seq = 0
-                #batch_correct = 0
-
                 for batches in tqdm(train_iterator):
                     input_seq, _ = batches.src
                     target = batches.trg
                     pred = model(input_seq)
                     loss = criterion(pred, target)  #target.contiguous().view(-1)
-                    
-                    #pred = torch.argmax(pred, 1)
-                    #batch_correct += (pred == target).sum().item()
-                    #num_seq += len(input_seq)     
-                    #accuracy = batch_correct / num_seq
+
                     pred_class = pred.argmax(dim=-1)
                     correct_pred = pred_class.eq(target).sum()
                     accuracy = correct_pred / pred.shape[0] #pred.shape[0]: batch_size
@@ -186,8 +170,6 @@ class Train():
 
                     epoch_losses += loss.item()
                     epoch_accs += accuracy.item()
-                    #epoch_losses.append(loss.item())
-                    #epoch_accs.append(accuracy)
                                     
                 return epoch_losses/len(train_iterator), epoch_accs/len(train_iterator)
 
