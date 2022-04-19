@@ -103,7 +103,7 @@ class LinformerSelfAttention(nn.Module):
             V = torch.einsum('bhjd,jk -> bhkd', V, E)
             K = torch.einsum('bhjd,jk -> bhkd', K, E)
             return V, K
-        #!# E,F 따로만들고, dinsum('bjd,jk -> bkd'로 다시 test해보기!)        
+        #!# E,F 따로만들고, einsum('bjd,jk -> bkd'로 다시 test해보기!)        
         #proj_seq_len = lambda args: torch.einsum('bnd,nk->bkd', *args)
         #kv_projs = (self.proj_k, self.proj_v)
         #K, V = map(proj_seq_len, zip((K,V), kv_projs))
