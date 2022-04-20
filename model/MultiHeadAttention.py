@@ -78,19 +78,22 @@ class LinformerSelfAttention(nn.Module):
         self.weight_k = nn.Linear(d_model, d_model)  # key weight(FC layer)
         self.weight_v = nn.Linear(d_model, d_model)  # value weight(FC layer)
 
+        '''
         def init_(tensor):
             dim = tensor.shape[-1]
             std = 1 / math.sqrt(dim)
             tensor.uniform_(-std, std)
             return tensor
 
-        #self.proj_k = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
-        #self.proj_v = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
+        self.proj_k = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
+        self.proj_v = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
+        '''
+        #self.E = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
         self.E = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
+        self.F = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
 
         self.fc_concat = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(drop_prob)
-
         self.scale = torch.sqrt(torch.FloatTensor([self.head_dim])).to(device)
         
     def forward(self, x, mask=None):
@@ -99,11 +102,11 @@ class LinformerSelfAttention(nn.Module):
         
         # query, key, value -> Q, K, V  
         Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)
-        def project_vk_linformer(V,K,E):
-            V = torch.einsum('bhjd,jk -> bhkd', V, E)
-            K = torch.einsum('bhjd,jk -> bhkd', K, E)
-            return V, K
-        #!# E,F 따로만들고 다시 test해보기!)        
+        #def project_vk_linformer(V,K,E):
+        #    V = torch.einsum('bhjd,jk -> bhkd', V, E)
+        #    K = torch.einsum('bhjd,jk -> bhkd', K, E)
+        #    return V, K
+        
         #proj_seq_len = lambda args: torch.einsum('bnd,nk->bkd', *args)
         #kv_projs = (self.proj_k, self.proj_v)
         #K, V = map(proj_seq_len, zip((K,V), kv_projs))
@@ -111,10 +114,12 @@ class LinformerSelfAttention(nn.Module):
         Q = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         K = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         V = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
-
-        K, V = project_vk_linformer(V,K,self.E)
+        
+        K = torch.einsum('bhjd,jk -> bhkd', K, self.E)
+        V = torch.einsum('bhjd,jk -> bhkd', V, self.E)
+        #V = torch.einsum('bhjd,jk -> bhkd', V, self.F)   
+        #K, V = project_vk_linformer(V,K,self.E)
         #=================================================================================================
-        #attn_score = torch.einsum('bhnd,bhkd->bhnk', Q,K) * (d_h ** -0.5)
         attn_score = torch.matmul(Q, K.permute(0,1,3,2)) / self.scale
         
         if mask is not None:
@@ -125,7 +130,6 @@ class LinformerSelfAttention(nn.Module):
             attn_score = attn_score.masked_fill(mask == 0, -1e10)
             
         attn_dstn = torch.softmax(attn_score, dim=-1)
-        
         out = torch.matmul(self.dropout(attn_dstn), V)
         #=================================================================================================
         out = out.permute(0,2,1,3).contiguous()
@@ -156,18 +160,60 @@ class MultiHeadAttention_CF(nn.Module):
 
     def forward(self, x): #def forward(self, x, mask=None):
         batch_size = x.shape[0]
-         
-        Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)   
+        
+        Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)
+        
         Q = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         K = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         V = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
-        
         #=================================================================================================
         attn_score = torch.matmul(Q, K.permute(0,1,3,2)) / self.scale
-        ## option_masking 
-        #if mask is not None:
-        #    mask = mask.unsqueeze(1)
-        #    attn_score = attn_score.masked_fill(mask == 0, -1e10)
+        attn_dstn = torch.softmax(attn_score, dim=-1)
+        out = torch.matmul(self.dropout(attn_dstn), V)
+        #=================================================================================================
+        out = out.permute(0,2,1,3).contiguous()
+        out = out.view(batch_size, -1, self.d_model)
+        out = self.fc_concat(out)
+        
+        return out
+
+############################################################################################################
+
+class LinformerSelfAttention_CF(nn.Module):
+    def __init__(self, d_model, n_head, drop_prob, device, n_position, k):
+        super().__init__()
+        assert d_model % n_head == 0  # 필요조건
+
+        self.k=128
+        self.n_position = n_position
+
+        self.d_model = d_model  # 각 word에서의 임베딩 차원
+        self.n_head = n_head
+        self.head_dim = d_model // n_head  # 각 head에서의 임베딩 차원 
+
+        self.weight_q = nn.Linear(d_model, d_model)  # query weight(FC layer) ## Linear(Q)=Q*W_Q
+        self.weight_k = nn.Linear(d_model, d_model)  # key weight(FC layer)
+        self.weight_v = nn.Linear(d_model, d_model)  # value weight(FC layer)
+        self.E = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
+        self.F = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
+
+        self.fc_concat = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(drop_prob)
+        self.scale = torch.sqrt(torch.FloatTensor([self.head_dim])).to(device)
+
+    def forward(self, x): #def forward(self, x, mask=None):
+        batch_size, n, d = x.shape
+        assert n == self.n_position
+        Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)
+        
+        K = torch.einsum('bjd,jk -> bkd', K, self.E)
+        V = torch.einsum('bjd,jk -> bkd', V, self.F)     
+
+        Q = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
+        K = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
+        V = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
+        #=================================================================================================
+        attn_score = torch.matmul(Q, K.permute(0,1,3,2)) / self.scale
         attn_dstn = torch.softmax(attn_score, dim=-1)
         out = torch.matmul(self.dropout(attn_dstn), V)
         #=================================================================================================
