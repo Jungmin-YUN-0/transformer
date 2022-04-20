@@ -116,7 +116,7 @@ class LinformerSelfAttention(nn.Module):
         V = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         
         K = torch.einsum('bhjd,jk -> bhkd', K, self.E)
-        V = torch.einsum('bhjd,jk -> bhkd', V, self.E)
+        V = torch.einsum('bhjd,jk -> bhkd', V, self.F)
         #V = torch.einsum('bhjd,jk -> bhkd', V, self.F)   
         #K, V = project_vk_linformer(V,K,self.E)
         #=================================================================================================
