@@ -24,7 +24,6 @@ class DecoderLayer(nn.Module):
     def forward(self, trg, enc_src, trg_mask, src_mask):
         # 1-1# masked multi-head attention      
         _trg, _ = self.self_attention(trg, trg, trg, trg_mask)
-
         # 1-2# dropout, residual connection, layer normalization
         trg = trg + self.self_attn_layer_norm(self.dropout1(_trg))
         
