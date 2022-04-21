@@ -1,19 +1,20 @@
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from model.MultiHeadAttention import MultiHeadAttention_CF, LinformerSelfAttention_CF
+from model.MultiHeadAttention import MultiHeadAttention_CF, LinformerSelfAttention_CF, LinformerSelfAttention_CF_test
 from model.PositionalEncoding import PositionalEncoding
-       
+import copy
+
 
 class Classification_block(nn.Module):
-    def __init__(self, HIDDEN_DIM, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device, attn_option, n_position, topk_indices=None, idx=None):
+    def __init__(self, HIDDEN_DIM, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device, attn_option, n_position, topk_indices=None):
         super().__init__()
         heads = ENC_HEADS 
         ffnn_hidden_size = ENC_PF_DIM 
         dmodel = HIDDEN_DIM
         self.topk_indices = topk_indices
         self.attn_option = attn_option
-        self.idx = idx
+        #self.idx = idx
 
         if self.attn_option == "BASE":
             self.attention = MultiHeadAttention_CF(dmodel, heads, ENC_DROPOUT, device)
@@ -21,7 +22,6 @@ class Classification_block(nn.Module):
             self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128)
         elif self.attn_option == 'CT' :
             self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
-        
         self.layer_norm1 = nn.LayerNorm(dmodel)
         self.layer_norm2 = nn.LayerNorm(dmodel)
         
@@ -31,7 +31,7 @@ class Classification_block(nn.Module):
                 nn.Dropout(ENC_DROPOUT),
                 nn.Linear(ffnn_hidden_size, dmodel))
 
-    def forward(self, inputs, topk_indices=None):
+    def forward(self, inputs, topk_indices):
         """Forward propagate through the Transformer block.
         Parameters
         ----------
@@ -44,10 +44,10 @@ class Classification_block(nn.Module):
         """
         # Inputs shape (batch_size, seq_length, embedding_dim = dmodel)
         if self.attn_option == 'CT':
-            if self.idx==0:
-                topk_indices, attn_output = self.attention(inputs)
-            elif self.idx==1:
-                topk_indices, attn_output = self.attention(inputs, topk_indices)
+            if topk_indices is None:
+                attn_output, topk_indices = self.attention(inputs)
+            elif topk_indices is not None:
+                attn_output, topk_indices = self.attention(inputs, topk_indices)
         else:
             attn_output = self.attention(inputs)
         
@@ -58,7 +58,7 @@ class Classification_block(nn.Module):
 
         # Output shape (batch_size, seq_length, dmodel)
         if self.attn_option == 'CT' :
-            return topk_indices, output
+            return output, topk_indices
         else:
             return output
 
@@ -96,16 +96,17 @@ class CF_Transformer(nn.Module):
         self.tnf_blocks = nn.ModuleList()
         self.attn_option = attn_option
 
-        if self.attn_option == "CT":
-            self.first_tnf_blocks = Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position, idx=0)
-            for _ in range(n_layers-1):
-                self.tnf_blocks.append(Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position, idx=1))
-        
-        else: 
-            for _ in range(n_layers):
-                self.tnf_blocks.append(Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position))
+        #if self.attn_option == "CT":
+            #for _ in range(n_layers):
+                #self.tnf_blocks.append(Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position))
+            #layer = Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position)
+            #self.tnf_blocks = nn.ModuleList([copy.deepcopy(layer) for _ in range(n_layers)])   
+        #else:
+        layer = Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position)
+        self.tnf_blocks = nn.ModuleList([copy.deepcopy(layer) for _ in range(n_layers)])   
+            #self.tnf_blocks = nn.Sequential(*self.tnf_blocks)
+        #self.tnf_blocks = nn.Sequential(*self.tnf_blocks)
 
-        self.tnf_blocks = nn.Sequential(*self.tnf_blocks)
         self.dropout = nn.Dropout(drop_prob)            
         self.linear = nn.Linear(dmodel, dec_voc_size)
         self.scale = torch.sqrt(torch.FloatTensor([dmodel])).to(device)
@@ -127,9 +128,12 @@ class CF_Transformer(nn.Module):
         output = self.tok_embedding(inputs)
         output = output*self.scale
         output = self.dropout(self.pos_encoding(output))
+
         if self.attn_option == "CT":
-            tnf_output, topk_indices = self.first_tnf_blocks(output)
-            tnf_output, topk_indices = self.tnf_blocks(tnf_output, topk_indices)
+            topk_indices = None
+            tnf_output = output
+            for layer in self.tnf_blocks :
+                tnf_output, topk_indices = layer(tnf_output, topk_indices)
             output = tnf_output
         else:
             output = self.tnf_blocks(output)
