@@ -16,14 +16,14 @@ transformer (updated version 2022.04.21)
  
 	 python preprocess.py -data_task [MT / CF] -data_dir [wmt16 / imdb] -data_ext csv -data_pkl [pickleName.pickle]
 	 
-	 (MT is machine translation, CF is classification)
+	 (MT: machine translation, CF: classification)
 
 2. MAIN 
 
 	python main.py -gpu 1 -option [BASE / LR / CT] -task [TRAIN / TEST] -data_pkl [pickleName.pickle] -model_save [modelName.pt]  
 	-pred_name [predictionName.txt]
 	
-	(BASE is for vanilla transformer, LR is for low-rank attention(linformer), CT is for core-token attention(my model))
+	(BASE: vanilla transformer, LR: low-rank attention(linformer), CT: core-token attention(my model))
 	
 	
 	
