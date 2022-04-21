@@ -22,6 +22,7 @@ class Classification_block(nn.Module):
             self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128)
         elif self.attn_option == 'CT' :
             self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
+            #self.attention = LinformerSelfAttention_CF_test(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
         self.layer_norm1 = nn.LayerNorm(dmodel)
         self.layer_norm2 = nn.LayerNorm(dmodel)
         
@@ -31,7 +32,7 @@ class Classification_block(nn.Module):
                 nn.Dropout(ENC_DROPOUT),
                 nn.Linear(ffnn_hidden_size, dmodel))
 
-    def forward(self, inputs, topk_indices):
+    def forward(self, inputs, topk_indices=None): #!!#
         """Forward propagate through the Transformer block.
         Parameters
         ----------
@@ -96,16 +97,8 @@ class CF_Transformer(nn.Module):
         self.tnf_blocks = nn.ModuleList()
         self.attn_option = attn_option
 
-        #if self.attn_option == "CT":
-            #for _ in range(n_layers):
-                #self.tnf_blocks.append(Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position))
-            #layer = Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position)
-            #self.tnf_blocks = nn.ModuleList([copy.deepcopy(layer) for _ in range(n_layers)])   
-        #else:
         layer = Classification_block(dmodel, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position)
         self.tnf_blocks = nn.ModuleList([copy.deepcopy(layer) for _ in range(n_layers)])   
-            #self.tnf_blocks = nn.Sequential(*self.tnf_blocks)
-        #self.tnf_blocks = nn.Sequential(*self.tnf_blocks)
 
         self.dropout = nn.Dropout(drop_prob)            
         self.linear = nn.Linear(dmodel, dec_voc_size)
@@ -136,7 +129,8 @@ class CF_Transformer(nn.Module):
                 tnf_output, topk_indices = layer(tnf_output, topk_indices)
             output = tnf_output
         else:
-            output = self.tnf_blocks(output)
+            for layer in self.tnf_blocks :
+                output = layer(output)
         # Output dimensions (batch_size, seq_length, dmodel)
         
         ## opt1 max pooling
