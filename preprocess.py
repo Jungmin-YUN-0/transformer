@@ -7,10 +7,10 @@ from torchtext.data.utils import get_tokenizer
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-data_dir', help="directory of dataset")
-    parser.add_argument('-data_ext', help="extension of dataset")
-    parser.add_argument('-data_pkl', required=True, default="data.pickle", help="file name of preprocessed data(pickle file)")
-    parser.add_argument('-data_task', required=True, help="task of dataset" )
+    parser.add_argument('-data_dir', default='wmt16', help="directory of dataset")
+    parser.add_argument('-data_ext', default='csv', help="extension of dataset")
+    parser.add_argument('-data_pkl', default='data_wmt16_512_D2E', help="file name of preprocessed data(pickle file)")
+    parser.add_argument('-data_task', default='MT', help="task of dataset" )
   
     opt = parser.parse_args()
     
@@ -28,9 +28,9 @@ def main():
         return [token.text for token in spacy_de.tokenizer(text)]
 
     if task == 'MT' :
-        # (source:영어, target:독일어) _ 데이터전처리(token, 소문자 등)
-        SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512) #!# batch_first=True => [배치크기, length]
-        TRG = Field(tokenize=tokenize_de, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512) #!#
+        # (source:DE, target:EN) _ 데이터전처리(token, 소문자 등)
+        SRC = Field(tokenize=tokenize_de, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512) #!# batch_first=True => [배치크기, length]
+        TRG = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512) #!#
         #SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True) #!# batch_first=True => [배치크기, length]
         #TRG = Field(tokenize=tokenize_de, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True) #!#
     elif task == 'CF':
