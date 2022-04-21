@@ -5,10 +5,11 @@ import math
 import tensorflow as tf
 from einops import repeat
 
-# multi-head attention
+# multi-head attention 
 ## input: key, query, value
 ### d_model : 하나의 단어에 대한 임베딩 차원
 
+#vanilla transformer attention (machine translation task)
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model, n_head, drop_prob, device):
         super().__init__()
@@ -62,6 +63,7 @@ class MultiHeadAttention(nn.Module):
         return out, attn_score
   
 ###################################################################################################################
+#linformer attention (machine translation task)
 class LinformerSelfAttention(nn.Module):
     def __init__(self, d_model, n_head, drop_prob, device, n_position, k):
         super().__init__()
@@ -122,7 +124,7 @@ class LinformerSelfAttention(nn.Module):
 
 
 ###################################################################################################################
-
+#vanilla transformer attention (classification task)
 class MultiHeadAttention_CF(nn.Module):
     def __init__(self, d_model, n_head, drop_prob, device):
         super().__init__()
@@ -160,7 +162,8 @@ class MultiHeadAttention_CF(nn.Module):
         return out
 
 ############################################################################################################
-
+# linformer attention (classification task)
+# if pruning=True -> core_token attention까지 mixture
 class LinformerSelfAttention_CF(nn.Module):
     def __init__(self, d_model, n_head, drop_prob, device, n_position, k, pruning=False):
         super().__init__()
