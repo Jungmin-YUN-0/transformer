@@ -26,4 +26,6 @@ transformer (updated version 2022.04.21)
 	(BASE is for vanilla transformer, LR is for low-rank attention(linformer), CT is for core-token attention(my model))
 	
 	
+	
+	
 ![figure](https://user-images.githubusercontent.com/76892989/164385253-f8a784bd-df55-4ac1-a3d8-d34c80c321f2.png)
