@@ -13,15 +13,12 @@ class Encoder(nn.Module):
         super().__init__()
         self.device = device
 
-        # input dimenstion → embedding dimension
         self.tok_embedding = nn.Embedding(enc_voc_size, d_model, padding_idx=SRC_PAD_IDX)
         # positional embedding 학습 (sinusoidal x) =>> self.pos_embedding = nn.Embedding(max_len, d_model)
         self.pos_encoding = PositionalEncoding(d_model, n_position=n_position)
-        #self.layers = nn.ModuleList([EncoderLayer.EncoderLayer(d_model, n_head, ffn_hidden, drop_prob, device) for _ in range(n_layers)])
         encoder_layer = EncoderLayer(d_model, n_head, ffn_hidden, drop_prob, device, attn_option, n_position)
         self.layers = nn.ModuleList([copy.deepcopy(encoder_layer) for _ in range(n_layers)])
         self.dropout = nn.Dropout(drop_prob)
-        #self.d_model = d_model
         self.scale = torch.sqrt(torch.FloatTensor([d_model])).to(device)  ## normalization (가중치에 d_model을 곱함)
         
     def forward(self, src, src_mask):
@@ -30,7 +27,6 @@ class Encoder(nn.Module):
         
         x = self.tok_embedding(x)
         x = x * self.scale
-        #src *= self.d_model**0.5
         x = self.dropout(self.pos_encoding(x))
         
         for layer in self.layers :
