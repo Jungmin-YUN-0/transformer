@@ -4,21 +4,13 @@ from test import Test
 
 
 parser = argparse.ArgumentParser()
-#parser.add_argument('-gpu', required=True, default="1", help="# of gpu")
-#parser.add_argument('-option', required=True, default='BASE', help="BASE / LR / CT ")
-#parser.add_argument('-task', required=True, default='TRAIN', help="TRAIN / TEST ")
 parser.add_argument('-gpu', default="3", help="# of gpu")
-parser.add_argument('-option', default='BASE', help="BASE / LR / CT ")
+parser.add_argument('-option', default='CT', help="BASE(vanilla transformer) / LR(low-rank attention) / CT(core-token attention) ")
 parser.add_argument('-task',  default='TRAIN', help="TRAIN / TEST ")
+parser.add_argument('-data_task', default="CF", help="MT(machine translation) / CF(classification)" )
 
-#parser.add_argument('-data_task', default="CF", help="task of dataset[MT / CF]" )
-parser.add_argument('-data_task', default="MT", help="task of dataset[MT / CF]" )
-
-#parser.add_argument('-data_pkl', default="data_imdb_256_CF.pickle", help="file name of preprocessed data(pickle file)")
-parser.add_argument('-data_pkl', default="data_wmt16_512.pickle", help="file name of preprocessed data(pickle file)")
-#parser.add_argument('-model_save', default="classification_16.pt", help="name of saved(updated) model")
-parser.add_argument('-model_save', default="test_model.pt", help="name of saved(updated) model")
-#parser.add_argument('-pred_save', default="LR1e-3_16_E.txt", help="name of file containing prediction result")
+parser.add_argument('-data_pkl', default="data_imdb_256_CF_0419.pickle", help="file name of preprocessed data(pickle file)")
+parser.add_argument('-model_save', default="classification_CT.pt", help="name of saved(updated) model")
 parser.add_argument('-pred_save', default="test_save.txt", help="name of file containing prediction result")
 
 parser.add_argument('-batch_size', default=16, type=int, help="batch size")
