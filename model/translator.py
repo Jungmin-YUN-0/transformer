@@ -60,7 +60,7 @@ class Translator(nn.Module):
         gen_seq[:, step] = best_k_idx
         return gen_seq, scores
 
-
+ 
     def translate_sentence(self, src_seq):
         # batch size = 1
         assert src_seq.size(0) == 1
