@@ -20,6 +20,7 @@ transformer (updated version)
 
 2. MAIN 
 
-	python main.py -gpu 1 -option [BASE / LR / CT] -task [TRAIN / TEST] -data_pkl [pickleName.pickle] -model_save [modelName.pt]  -pred_name [predictionName.txt]
+	python main.py -gpu 1 -option [BASE / LR / CT] -task [TRAIN / TEST] -data_pkl [pickleName.pickle] -model_save [modelName.pt]  
+	-pred_name [predictionName.txt]
 	
 	(BASE is for vanilla transformer, LR is for low-rank attention, CT is for core-token attention)
