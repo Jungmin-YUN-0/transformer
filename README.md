@@ -31,6 +31,6 @@ transformer (updated version 2022.04.21)
 
 
 vanilla transformer : 0.2998
-linformer : 0.0408
+linformer : 0.0408 ,,,
 	
 ![figure](https://user-images.githubusercontent.com/76892989/164385253-f8a784bd-df55-4ac1-a3d8-d34c80c321f2.png)
