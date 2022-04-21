@@ -26,7 +26,10 @@ transformer (updated version 2022.04.21)
 	(BASE is for vanilla transformer, LR is for low-rank attention(linformer), CT is for core-token attention(my model))
 	
 	
+	
 [bleu score] De -> En
+
+
 vanilla transformer : 0.2998
 linformer : 0.0408
 	
