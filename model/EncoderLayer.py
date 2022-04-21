@@ -3,7 +3,6 @@ from model.MultiHeadAttention import MultiHeadAttention,LinformerSelfAttention
 from model.FeedForward import FeedForward
 
 
-# encoder layer
 
 ## multihead attention + feed-forward neural network
 class EncoderLayer(nn.Module):
@@ -23,7 +22,6 @@ class EncoderLayer(nn.Module):
         self.ffn_layer_norm = nn.LayerNorm(d_model)
         self.dropout1 = nn.Dropout(drop_prob)
         self.dropout2 = nn.Dropout(drop_prob)
-        #self.dropout3 = nn.Dropout(drop_prob) #!#
         
     def forward(self, src, src_mask):
         # 1-1# self-attention (src가 복제되어 query, key, value로 입력)
@@ -31,7 +29,6 @@ class EncoderLayer(nn.Module):
             _src, _ = self.attention(src, src, src, src_mask)
         elif self.attn_option == 'LR':
             _src, _ = self.attention(src, src_mask)
-
         # 1-2# dropout, residual connection, layer normalization
         src = src + self.attn_layer_norm(self.dropout1(_src)) #!#
 
@@ -39,7 +36,5 @@ class EncoderLayer(nn.Module):
         _src = self.ffn(src)
         # 2-2# dropout, residual connection, layer normalization
         src = src + self.ffn_layer_norm(self.dropout2(_src))
-        #x = self.ffn_layer_norm(x + self.dropout2(_src)) #!#
         
-        #x = self.dropout3(x) #!#
         return src
