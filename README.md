@@ -14,12 +14,12 @@ transformer (updated version)
 [실행]
 1. DATA PREPROCESSING
  
-	 python preprocess.py -data_task [MT / CF] -data_dir [wmt16 / imdb] -data_ext csv -data_pkl [data_wmt16.pickle / data_imdb.pickle]
+	 python preprocess.py -data_task [MT / CF] -data_dir [wmt16 / imdb] -data_ext csv -data_pkl [pickleName.pickle]
 	 
 	 (MT is machine translation, CF is classification)
 
-2. MAIN (TASK: TRAIN, TEST)
+2. MAIN 
 
-	python main.py -gpu 1 -option [BASE / LR / CT 중에서 선택] -task [TRAIN / TEST 중에서 선택]	
+	python main.py -gpu 1 -option [BASE / LR / CT] -task [TRAIN / TEST] -data_pkl [pickleName.pickle] -model_save [modelName.pt] -pred_name [predictionName.txt]
 	
-	(LR is for low-rank attention, CT is for core-token attention)
+	(BASE is for vanilla transformer, LR is for low-rank attention, CT is for core-token attention)
