@@ -14,7 +14,7 @@ transformer (updated version 2022.04.21)
 [실행]
 1. DATA PREPROCESSING
  
-	 python preprocess.py -data_task [MT / CF] -data_dir [wmt16 / imdb] -data_ext csv -data_pkl [pickleName.pickle]
+	 python preprocess.py -data_task [MT / CF] -data_dir [wmt16 / imdb / yelp5] -data_ext csv -data_pkl [pickleName.pickle]
 	 
 	 (MT: machine translation, CF: classification)
 
