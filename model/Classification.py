@@ -21,8 +21,8 @@ class Classification_block(nn.Module):
         elif self.attn_option == "LR":
             self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128)
         elif self.attn_option == 'CT' :
-            self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
-            #self.attention = LinformerSelfAttention_CF_test(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
+            #self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
+            self.attention = LinformerSelfAttention_CF_test(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
         self.layer_norm1 = nn.LayerNorm(dmodel)
         self.layer_norm2 = nn.LayerNorm(dmodel)
         
