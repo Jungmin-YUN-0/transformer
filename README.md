@@ -21,7 +21,7 @@ transformer (updated version 2022.04.21)
 2. MAIN 
 
 	python main.py -gpu 1 -option [BASE / LR / CT] -task [TRAIN / TEST] -data_pkl [pickleName.pickle] -model_save [modelName.pt]  
-	-pred_name [predictionName.txt] -data_task [MT / CF]
+	-pred_save [predictionName.txt] -data_task [MT / CF]
 	
 	(BASE: vanilla transformer, LR: low-rank attention(linformer), CT: core-token attention(proposed model))
 	
