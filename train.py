@@ -1,3 +1,4 @@
+from dataclasses import fields
 from email.policy import default
 from tqdm import tqdm, tqdm_notebook
 import dill
@@ -31,6 +32,14 @@ class Train():
         N_EPOCHS = n_epoch
         LEARNING_RATE  = learning_rate
         attn_option = opt
+
+        SEED=42
+        torch.manual_seed(SEED) # torch 
+        torch.cuda.manual_seed(SEED)
+        np.random.seed(SEED) # numpy
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(SEED)
+
 
     ########################################################################################################################################################
         if data_task == "MT":
@@ -260,14 +269,38 @@ class Train():
         train_iterator = BucketIterator(train_data, batch_size=batch_size, device=device, train=True)
         valid_iterator = BucketIterator(val_data, batch_size=batch_size, device=device)
         #test_iterator = BucketIterator(test_data, batch_size=batch_size, device=device)
+        '''
+        import spacy
+        from torchtext.data import TabularDataset, Field
+        spacy_en = spacy.load('en_core_web_sm')  # en tokenization
+        def tokenize_en(text):
+            return [token.text for token in spacy_en.tokenizer(text)]
+        
+        SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512, include_lengths=True)
+        TRG = Field(sequential=False, use_vocab=False, is_target=True, unk_token=None)
+        
+        train_data = TabularDataset(path= './hyperpartisan/train.csv', format="csv", fields=[('src', SRC), ('trg', TRG)], skip_header=True)
+        valid_data = TabularDataset(path='./hyperpartisan/val.csv', format="csv", fields=[('src', SRC), ('trg', TRG)], skip_header=True)
+        
+        SRC.build_vocab(train_data.src, min_freq=2) #!#
+        TRG.build_vocab(train_data.trg, min_freq=2) #!#
+        
+        INPUT_DIM = len(SRC.vocab)
+        OUTPUT_DIM = len(TRG.vocab)
 
+        train_iterator = BucketIterator(train_data, batch_size=batch_size, device=device, train=True)
+        valid_iterator = BucketIterator(valid_data, batch_size=batch_size, device=device)
+
+        SRC_PAD_IDX = SRC.vocab.stoi[SRC.pad_token]
+        #TRG_PAD_IDX = TRG.vocab.stoi[TRG.pad_token]
+        '''
 
         #==================== CREATE MODEL ===================#
         ## Transformer
         if data_task == "MT":
             model = Transformer(INPUT_DIM, OUTPUT_DIM, SRC_PAD_IDX, TRG_PAD_IDX, HIDDEN_DIM,
-                            ENC_LAYERS, DEC_LAYERS, ENC_HEADS, DEC_HEADS,
-                            ENC_PF_DIM, DEC_PF_DIM, ENC_DROPOUT, DEC_DROPOUT, device, attn_option).to(device)
+                                ENC_LAYERS, DEC_LAYERS, ENC_HEADS, DEC_HEADS,
+                                ENC_PF_DIM, DEC_PF_DIM, ENC_DROPOUT, DEC_DROPOUT, device, attn_option).to(device)
         elif data_task == "CF":
             model = CF_Transformer(INPUT_DIM, OUTPUT_DIM, SRC_PAD_IDX, HIDDEN_DIM, ENC_LAYERS, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device, attn_option).to(device)
         
