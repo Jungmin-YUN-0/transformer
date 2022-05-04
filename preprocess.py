@@ -7,10 +7,10 @@ from torchtext.data.utils import get_tokenizer
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-data_dir', default='wmt16', help="directory of dataset")
+    parser.add_argument('-data_dir', default='yelp5', help="directory of dataset")
     parser.add_argument('-data_ext', default='csv', help="extension of dataset")
-    parser.add_argument('-data_pkl', default='data_wmt16_512_D2E', help="file name of preprocessed data(pickle file)")
-    parser.add_argument('-data_task', default='MT', help="task of dataset" )
+    parser.add_argument('-data_pkl', default='data_yelp5_256.pickle', help="file name of preprocessed data(pickle file)")
+    parser.add_argument('-data_task', default='CF', help="task of dataset" )
   
     opt = parser.parse_args()
     
@@ -41,6 +41,7 @@ def main():
         #TRG = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=1)
         TRG = Field(sequential=False, use_vocab=False, is_target=True, unk_token=None)
 
+    print('[Info] Loading dataset ...')
     ################
     # make dataset #
     ################
