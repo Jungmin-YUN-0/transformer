@@ -21,8 +21,8 @@ class Classification_block(nn.Module):
         elif self.attn_option == "LR":
             self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128)
         elif self.attn_option == 'CT' :
-            #self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
-            self.attention = LinformerSelfAttention_CF_test(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True) 
+            #self.attention = LinformerSelfAttention_CF(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True)  #mixture model
+            self.attention = LinformerSelfAttention_CF_test(dmodel, heads, ENC_DROPOUT, device, n_position, k=128, pruning=True)  #only core-token attention
         self.layer_norm1 = nn.LayerNorm(dmodel)
         self.layer_norm2 = nn.LayerNorm(dmodel)
         
@@ -89,7 +89,7 @@ class CF_Transformer(nn.Module):
         Probability of an element of the tensor to be zeroed.
     """
     
-    def __init__(self, enc_voc_size, dec_voc_size, SRC_PAD_IDX, dmodel, n_layers, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position=256):
+    def __init__(self, enc_voc_size, dec_voc_size, SRC_PAD_IDX, dmodel, n_layers, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position=512):
         
         super().__init__()
         self.tok_embedding = nn.Embedding(enc_voc_size, dmodel, padding_idx=SRC_PAD_IDX)
