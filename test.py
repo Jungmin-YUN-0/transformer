@@ -11,6 +11,9 @@ import wandb
 import torch.nn.functional as F
 from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+
 
 class Test():
     def __init__(self, gpu, opt, batch_size, data_pkl, model_save, pred_save, hidden_dim, n_layer, n_head, ff_dim, dropout, data_task):
@@ -99,7 +102,7 @@ class Test():
                 print('[Info] Finished.')
                 print(f'BLEU score : {bleu}')
             
-            elif attn_option == 'LR':
+            elif attn_option == 'LR' or attn_option =='CT':
                 with open(self.saved_result, 'w') as f:
                     for example in tqdm(test_data, desc='  - (Test)', leave=False):
                         src_seq = [SRC.vocab.stoi.get(word, unk_idx) for word in example.src]
@@ -146,13 +149,18 @@ class Test():
                         accuracy = correct_pred / pred.shape[0]
 
                         epoch_accuracy += accuracy.item()                        
-                        F1_score = f1_score(target.cpu(), pred_class.cpu())
-                return epoch_accuracy / len(iterator), F1_score
+                        F1_score = f1_score(target.cpu(), pred_class.cpu(), average='binary')
+                        Recall_score =  recall_score(target.cpu(), pred_class.cpu(), average='binary')
+                        Precision_score = precision_score(target.cpu(), pred_class.cpu(), average='binary')
+                        #F1_score = f1_score(target.cpu(), pred_class.cpu(), average='weighted')#!!#average=binary
+                return epoch_accuracy / len(iterator), F1_score, Recall_score, Precision_score
 
 
-            acc, F1_score = get_predictions(model, test_iterator, device)
+            acc, F1_score, Recall_score, Precision_score = get_predictions(model, test_iterator, device)
             print(f"accuracy: {acc}")
             print(f"f1_score: {F1_score}")
+            print(f"recall_score: {Recall_score}")
+            print(f"precision_score: {Precision_score}")
 
 ##################################################################################################################
 
