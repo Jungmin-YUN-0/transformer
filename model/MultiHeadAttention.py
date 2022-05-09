@@ -86,7 +86,6 @@ class LinformerSelfAttention(nn.Module):
             std = 1 / math.sqrt(dim)
             tensor.uniform_(-std, std)
             return tensor
-
         self.proj_k = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
         self.proj_v = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
         '''
@@ -428,8 +427,8 @@ class LinformerSelfAttention_CF_test(nn.Module):
                 importance_score = torch.mean(attn_dstn_p, dim=2) #column mean of attn_dstn
 
             n = K_p.size(2)
-            r = round(0.5**(1/6), 1) #round(0.5**(1/n_layer(=6)), 1) #최종적으로 전체 token의 절반 이상은 남기고자 함(token pruning할때 0.5 이하로는 성능이 안좋았다는 논문 결과가 있었음..)
-            #r = round(0.1**(1/6), 1)
+            #r = round(0.5**(1/6), 1) #round(0.5**(1/n_layer(=6)), 1) #최종적으로 전체 token의 절반 이상은 남기고자 함(token pruning할때 0.5 이하로는 성능이 안좋았다는 논문 결과가 있었음..)
+            r = 0.9
             r = int(n*r)
             
             topk_indices = torch.topk(importance_score, k=r, dim=-1)[1]
@@ -439,6 +438,8 @@ class LinformerSelfAttention_CF_test(nn.Module):
             out_p = out_p.view(batch_size, -1, self.d_model)
             out_p = self.fc_concat(out_p)
             
+            print(topk_indices)
+
             #out = out_l+out_p
         return out_p, topk_indices
         #if self.pruning == True:
