@@ -1,4 +1,4 @@
-import torch
+imimport torch
 import dill
 from tqdm import tqdm
 from torchtext.data import Dataset, BucketIterator
@@ -9,11 +9,8 @@ from model.translator import Translator
 import argparse
 import wandb
 import torch.nn.functional as F
-from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-
+from sklearn import metrics
 
 class Test():
     def __init__(self, gpu, opt, batch_size, data_pkl, model_save, pred_save, hidden_dim, n_layer, n_head, ff_dim, dropout, data_task):
@@ -58,8 +55,16 @@ class Test():
         model.load_state_dict(torch.load(self.saved_model))
         print('[Info] Trained model state loaded.')
 
-        wandb.init(project="transformer", entity="jungminy")
         
+        #wandb.init(project="transformer", entity="jungminy")
+
+        #import torchvision.models as models
+        #from ptflops import get_model_complexity_info
+        #dummy_size = (256, 1)
+        #macs, params = get_model_complexity_info(model, dummy_size, as_strings=True, print_per_layer_stat=False, verbose=False)
+                               
+        #print('computational complexity: ', macs)
+        #print('number of parameters: ', params)
 
         #===============================================================#
         if data_task == 'MT':
@@ -128,7 +133,7 @@ class Test():
                 bleu = bleu_score(pred_trgs, trgs, max_n=4, weights=[0.25,0.25,0.25,0.25])
                 print('[Info] Finished.')
                 print(f'BLEU score : {bleu}')
-            wandb.log({"bleu_score": bleu})
+            #wandb.log({"bleu_score": bleu})
 
             return
 ##################################################################################################################
@@ -137,10 +142,14 @@ class Test():
                 model.eval()
 
                 epoch_accuracy = 0
+                
+                targets = torch.tensor([]).to(device)
+                preds= torch.tensor([]).to(device)
 
                 with torch.no_grad():
                     for batch in tqdm(iterator):
                         input_seq, _ = batch.src
+                        
                         target = batch.trg
                         pred = model(input_seq)
 
@@ -148,20 +157,19 @@ class Test():
                         correct_pred = pred_class.eq(target).sum()
                         accuracy = correct_pred / pred.shape[0]
 
-                        epoch_accuracy += accuracy.item()                        
-                        F1_score = f1_score(target.cpu(), pred_class.cpu(), average='binary')
-                        Recall_score =  recall_score(target.cpu(), pred_class.cpu(), average='binary')
-                        Precision_score = precision_score(target.cpu(), pred_class.cpu(), average='binary')
-                        #F1_score = f1_score(target.cpu(), pred_class.cpu(), average='weighted')#!!#average=binary
-                return epoch_accuracy / len(iterator), F1_score, Recall_score, Precision_score
+                        epoch_accuracy += accuracy.item()         
 
+                        targets = torch.cat([targets,target])
+                        preds = torch.cat([preds, pred_class])
 
-            acc, F1_score, Recall_score, Precision_score = get_predictions(model, test_iterator, device)
+                    #F1_score = f1_score(targets.cpu(), preds.cpu(), average='binary')# number of class = 2
+                    F1_score = f1_score(targets.cpu(), preds.cpu(), average='weighted') # number of class > 2
+                return epoch_accuracy / len(iterator), F1_score
+
+            acc, F1_score = get_predictions(model, test_iterator, device)
+
             print(f"accuracy: {acc}")
             print(f"f1_score: {F1_score}")
-            print(f"recall_score: {Recall_score}")
-            print(f"precision_score: {Precision_score}")
-
 ##################################################################################################################
 
 if __name__ == "__main__":
