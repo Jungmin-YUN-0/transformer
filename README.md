@@ -25,6 +25,7 @@ transformer (updated version 2022.04.21)
 	(BASE: vanilla transformer, LR: low-rank attention(linformer), CT: core-token attention(proposed model))
 	
 	
+
 	
 [bleu score] De -> En
 
