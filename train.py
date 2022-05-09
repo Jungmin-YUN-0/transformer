@@ -140,10 +140,10 @@ class Train():
                 
                 best_valid_loss = float('inf')
                 #valid_losses = []
-
+                time_check = []
                 for epoch in range(N_EPOCHS):
                     print(f'[ Epoch | {epoch}:{N_EPOCHS}]')
-                    
+                    start_time_check = time.time()
                     start_time = time.time() # 시작 시간
                     train_loss, train_accu = train(model, train_iterator, optimizer, device, SRC_PAD_IDX, TRG_PAD_IDX, criterion, data)
                     print_performances('Training', train_accu, start_time, train_loss)
@@ -152,7 +152,8 @@ class Train():
                     valid_loss, valid_accu = evaluate(model, valid_iterator, device, SRC_PAD_IDX, TRG_PAD_IDX, criterion)
                     print_performances('Validation', valid_accu, start_time, valid_loss)
                     
-                    
+                    end_time_check = time.time()
+                    time_check.append(end_time_check - start_time_check)
                     if valid_loss < best_valid_loss:
                         best_valid_loss = valid_loss
                         torch.save(model.state_dict(), saved_model)
@@ -163,7 +164,7 @@ class Train():
                     wandb.log({"valid_loss": valid_loss})
                     wandb.log({"train_accuracy": train_accu})   
                     wandb.log({"valid_accuracy": valid_accu})
-                
+                print(time_check/8)
         ########################################################################################################################
         ########################################################################################################################
         
@@ -262,38 +263,13 @@ class Train():
 
         train_data = Dataset(examples=data['train_data'], fields=fields)
         val_data = Dataset(examples=data['valid_data'], fields=fields)
-        #test_data = Dataset(examples=data['test_data'], fields=fields)
 
         #train_iterator = torch.utils.data.DataLoader(train_data, batch_size=batch_size, drop_last=True)
         #valid_iterator = torch.utils.data.DataLoader(val_data, batch_size=batch_size, drop_last=True)
         train_iterator = BucketIterator(train_data, batch_size=batch_size, device=device, train=True)
         valid_iterator = BucketIterator(val_data, batch_size=batch_size, device=device)
-        #test_iterator = BucketIterator(test_data, batch_size=batch_size, device=device)
-        '''
-        import spacy
-        from torchtext.data import TabularDataset, Field
-        spacy_en = spacy.load('en_core_web_sm')  # en tokenization
-        def tokenize_en(text):
-            return [token.text for token in spacy_en.tokenizer(text)]
-        
-        SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512, include_lengths=True)
-        TRG = Field(sequential=False, use_vocab=False, is_target=True, unk_token=None)
-        
-        train_data = TabularDataset(path= './hyperpartisan/train.csv', format="csv", fields=[('src', SRC), ('trg', TRG)], skip_header=True)
-        valid_data = TabularDataset(path='./hyperpartisan/val.csv', format="csv", fields=[('src', SRC), ('trg', TRG)], skip_header=True)
-        
-        SRC.build_vocab(train_data.src, min_freq=2) #!#
-        TRG.build_vocab(train_data.trg, min_freq=2) #!#
-        
-        INPUT_DIM = len(SRC.vocab)
-        OUTPUT_DIM = len(TRG.vocab)
 
-        train_iterator = BucketIterator(train_data, batch_size=batch_size, device=device, train=True)
-        valid_iterator = BucketIterator(valid_data, batch_size=batch_size, device=device)
 
-        SRC_PAD_IDX = SRC.vocab.stoi[SRC.pad_token]
-        #TRG_PAD_IDX = TRG.vocab.stoi[TRG.pad_token]
-        '''
 
         #==================== CREATE MODEL ===================#
         ## Transformer
@@ -334,6 +310,7 @@ class Train():
         
         #optional
         #wandb.watch(model)
+        
         
         start_train(model, train_iterator, valid_iterator, optimizer, device, N_EPOCHS, criterion)
         
