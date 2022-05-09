@@ -89,7 +89,7 @@ class CF_Transformer(nn.Module):
         Probability of an element of the tensor to be zeroed.
     """
     
-    def __init__(self, enc_voc_size, dec_voc_size, SRC_PAD_IDX, dmodel, n_layers, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position=512):
+    def __init__(self, enc_voc_size, dec_voc_size, SRC_PAD_IDX, dmodel, n_layers, n_head, ffnn_hidden, drop_prob, device, attn_option, n_position=512):#512
         
         super().__init__()
         self.tok_embedding = nn.Embedding(enc_voc_size, dmodel, padding_idx=SRC_PAD_IDX)
