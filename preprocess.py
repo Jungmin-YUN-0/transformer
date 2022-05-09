@@ -31,11 +31,8 @@ def main():
         # (source:DE, target:EN) _ 데이터전처리(token, 소문자 등)
         SRC = Field(tokenize=tokenize_de, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512) #!# batch_first=True => [배치크기, length]
         TRG = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=512) #!#
-        #SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True) #!# batch_first=True => [배치크기, length]
-        #TRG = Field(tokenize=tokenize_de, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True) #!#
     elif task == 'CF':
         # TEXT(SRC)
-        #SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=256)
         SRC = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=256, include_lengths=True)
         # LABEL(TRG)
         #TRG = Field(tokenize=tokenize_en, init_token="<sos>", eos_token="<eos>", pad_token="<blank>", lower=True, batch_first=True, fix_length=1)
@@ -55,6 +52,7 @@ def main():
     SRC.build_vocab(train_data.src, min_freq=2) #!#
     TRG.build_vocab(train_data.trg, min_freq=2) #!#
     # [.vocab.stoi] token index ex(없는 단어: 0, padding:1, <sos>:2, <eos>:3)
+
     
     ##################
     # save to pickle #
