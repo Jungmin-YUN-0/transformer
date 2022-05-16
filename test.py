@@ -1,4 +1,4 @@
-imimport torch
+import torch
 import dill
 from tqdm import tqdm
 from torchtext.data import Dataset, BucketIterator
@@ -9,7 +9,10 @@ from model.translator import Translator
 import argparse
 import wandb
 import torch.nn.functional as F
+#from sklearn.metrics import classification_report
 from sklearn.metrics import f1_score
+#from sklearn.metrics import precision_score
+#from sklearn.metrics import recall_score
 from sklearn import metrics
 
 class Test():
@@ -56,13 +59,16 @@ class Test():
         print('[Info] Trained model state loaded.')
 
         
+
         #wandb.init(project="transformer", entity="jungminy")
 
         #import torchvision.models as models
         #from ptflops import get_model_complexity_info
+
         #dummy_size = (256, 1)
+
         #macs, params = get_model_complexity_info(model, dummy_size, as_strings=True, print_per_layer_stat=False, verbose=False)
-                               
+                                        
         #print('computational complexity: ', macs)
         #print('number of parameters: ', params)
 
@@ -162,6 +168,13 @@ class Test():
                         targets = torch.cat([targets,target])
                         preds = torch.cat([preds, pred_class])
 
+                        #F1_score = f1_score(target.cpu(), pred_class.cpu(), average='binary')
+                        #Recall_score =  recall_score(target.cpu(), pred_class.cpu(), average='binary')
+                        #Precision_score = precision_score(target.cpu(), pred_class.cpu(), average='binary')
+                        #F1_score = f1_score(target.cpu(), pred_class.cpu(), average='weighted')#!!#average=binary
+                        #F1_score_t = tfa.metrics.F1Score(num_classes=2, average="weighted")
+                        
+                        #print(metrics.classification_report(target.cpu(), pred_class.cpu(), digits=4))
                     #F1_score = f1_score(targets.cpu(), preds.cpu(), average='binary')# number of class = 2
                     F1_score = f1_score(targets.cpu(), preds.cpu(), average='weighted') # number of class > 2
                 return epoch_accuracy / len(iterator), F1_score
@@ -170,6 +183,13 @@ class Test():
 
             print(f"accuracy: {acc}")
             print(f"f1_score: {F1_score}")
+            #print(f"f1_score(tensorflow): {F1_score_t}")
+
+            #print(f"recall_score: {Recall_score}")
+            #print(f"precision_score: {Precision_score}")
+        # from thop import profile
+        # flops, params = profile(model, inputs=(torch.randn(1,64).to(device).long(),), verbose=False)
+        # print(flops, params)
 ##################################################################################################################
 
 if __name__ == "__main__":
