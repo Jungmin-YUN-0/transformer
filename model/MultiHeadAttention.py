@@ -80,9 +80,21 @@ class LinformerSelfAttention(nn.Module):
         self.weight_k = nn.Linear(d_model, d_model)  # key weight(FC layer)
         self.weight_v = nn.Linear(d_model, d_model)  # value weight(FC layer)
 
+        '''
+        def init_(tensor):
+            dim = tensor.shape[-1]
+            std = 1 / math.sqrt(dim)
+            tensor.uniform_(-std, std)
+            return tensor
+        self.proj_k = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
+        self.proj_v = nn.Parameter(init_(torch.zeros(self.n_position, self.k)))
+        '''
+        #self.E = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
         self.E = nn.Parameter(torch.randn(self.k, self.n_position), requires_grad=True)
         self.F = nn.Parameter(torch.randn(self.k, self.n_position), requires_grad=True)
-     
+        #self.E = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
+        #self.F = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
+
         self.fc_concat = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(drop_prob)
         self.scale = torch.sqrt(torch.FloatTensor([self.head_dim])).to(device)
@@ -93,15 +105,27 @@ class LinformerSelfAttention(nn.Module):
         
         # query, key, value -> Q, K, V  
         Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)
+        #def project_vk_linformer(V,K,E):
+        #    V = torch.einsum('bhjd,jk -> bhkd', V, E)
+        #    K = torch.einsum('bhjd,jk -> bhkd', K, E)
+        #    return V, K
         
+        #proj_seq_len = lambda args: torch.einsum('bnd,nk->bkd', *args)
+        #kv_projs = (self.proj_k, self.proj_v)
+        #K, V = map(proj_seq_len, zip((K,V), kv_projs))
+
         ##[batch, length, n_head, head_dim] -> [batch, n_head, length, head_dim]
         Q = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         K = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         V = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         
+        #K = torch.einsum('bhnd,nk -> bhkd', K, self.E)
+        #V = torch.einsum('bhnd,nk -> bhkd', V, self.F)
         K = torch.einsum('kn, bhnd -> bhkd', self.E, K)
         V = torch.einsum('kn, bhnd -> bhkd', self.F, V)
         
+        #V = torch.einsum('bhjd,jk -> bhkd', V, self.F)   
+        #K, V = project_vk_linformer(V,K,self.E)
         #=================================================================================================
         attn_score = torch.matmul(Q, K.permute(0,1,3,2)) / self.scale
         
@@ -156,6 +180,14 @@ class CoreTokenAttention_test(nn.Module):
                 K_p = torch.gather(K_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=K_p.shape[-1]))          
                 V_p = torch.gather(V_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=V_p.shape[-1]))
 
+            #topk_indices b h l
+            
+            # b_i = torch.arange(batch_size).repeat(self.n_head).view(self.n_head, batch_size).transpose(0,1).unsqueeze(-1).tolist()          
+            # h_i = torch.arange(self.n_head).repeat(batch_size).view(batch_size,self.n_head).unsqueeze(-1).tolist()
+            # K_p = K[b_i,topk_indices,h_i,:]
+            # V_p = V[b_i,topk_indices,h_i,:]
+
+        
         if self.pruning == True:
             attn_score_p = torch.matmul(Q_p, K_p.permute(0,1,3,2)) / self.scale
             
@@ -255,6 +287,8 @@ class LinformerSelfAttention_CF(nn.Module):
         self.weight_q = nn.Linear(d_model, d_model)  # query weight(FC layer) ## Linear(Q)=Q*W_Q
         self.weight_k = nn.Linear(d_model, d_model)  # key weight(FC layer)
         self.weight_v = nn.Linear(d_model, d_model)  # value weight(FC layer)
+        #self.E = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
+        #self.F = nn.Parameter(torch.randn(self.n_position, self.k), requires_grad=True)
         self.E = nn.Parameter(torch.randn(self.k, self.n_position), requires_grad=True)
         self.F = nn.Parameter(torch.randn(self.k, self.n_position), requires_grad=True)
 
@@ -267,6 +301,9 @@ class LinformerSelfAttention_CF(nn.Module):
         assert n == self.n_position
         Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)
            
+        #K_l = torch.einsum('bnd,nk -> bkd', K, self.E)
+        #V_l = torch.einsum('bnd,nk -> bkd', V, self.F)  
+
         Q_l = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         K_l = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
         V_l = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
@@ -281,7 +318,9 @@ class LinformerSelfAttention_CF(nn.Module):
             
             if topk_indices is not None:
                 K_p = torch.gather(K_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=K_p.shape[-1]))          
-                V_p = torch.gather(V_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=V_p.shape[-1]))    
+                V_p = torch.gather(V_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=V_p.shape[-1]))          
+                #K_p = tf.gather(K_p, self.topk_indices, batch_dims=-1) #n->r by token pruning
+                #V_p = tf.gather(V_p, self.topk_indices, batch_dims=-1) #n->r by token pruning
         #-------------------------------------------------------------------------------------------------
         attn_score_l = torch.matmul(Q_l, K_l.permute(0,1,3,2)) / self.scale
         attn_dstn_l = torch.softmax(attn_score_l, dim=-1)
@@ -337,6 +376,9 @@ class LinformerSelfAttention_CF_test(nn.Module):
         self.weight_k = nn.Linear(d_model, d_model)  # key weight(FC layer)
         self.weight_v = nn.Linear(d_model, d_model)  # value weight(FC layer)
 
+        #self.E = nn.Parameter(torch.randn(self.k, self.n_position), requires_grad=True)
+        #self.F = nn.Parameter(torch.randn(self.k, self.n_position), requires_grad=True)
+
         self.fc_concat = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(drop_prob)
         self.scale = torch.sqrt(torch.FloatTensor([self.head_dim])).to(device)
@@ -346,16 +388,34 @@ class LinformerSelfAttention_CF_test(nn.Module):
         #assert n == self.n_position
         Q, K, V = self.weight_q(x), self.weight_k(x), self.weight_v(x)
 
+        #Q_l = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
+        #K_l = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
+        #V_l = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
+
+        #K_l = torch.einsum('kn,bhnd -> bhkd', self.E, K_l)
+        #V_l = torch.einsum('kn,bhnd -> bhkd', self.F, V_l)
+
         if self.pruning == True:
             Q_p = Q.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
             K_p = K.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
             V_p = V.view(batch_size, -1, self.n_head, self.head_dim).permute(0, 2, 1, 3)
             
             if topk_indices is not None:
-
+                #b_i = torch.arange(batch_size).repeat(self.n_head).view(self.n_head, batch_size).transpose(0,1).unsqueeze(-1).tolist()          
+                #h_i = torch.arange(self.n_head).repeat(batch_size).view(batch_size,self.n_head).unsqueeze(-1).tolist()
+                #K_p = K_p[b_i,h_i,topk_indices,:]
+                #V_p = V_p[b_i,h_i,topk_indices,:]
                 K_p = torch.gather(K_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=K_p.shape[-1]))          
                 V_p = torch.gather(V_p, -2, repeat(topk_indices, 'b h r -> b h r d ', d=V_p.shape[-1]))          
-
+        
+        #-------------------------------------------------------------------------------------------------
+        #attn_score_l = torch.matmul(Q_l, K_l.permute(0,1,3,2)) / self.scale
+        #attn_dstn_l = torch.softmax(attn_score_l, dim=-1)
+        #out_l = torch.matmul(self.dropout(attn_dstn_l), V_l)
+        #-------------------------------------------------------------------------------------------------
+        #out_l = out_l.permute(0,2,1,3).contiguous()
+        #out_l = out_l.view(batch_size, -1, self.d_model)
+        #out_l = self.fc_concat(out_l)
         #=================================================================================================
         if self.pruning == True:
             attn_score_p = torch.matmul(Q_p, K_p.permute(0,1,3,2)) / self.scale
@@ -378,6 +438,11 @@ class LinformerSelfAttention_CF_test(nn.Module):
             out_p = out_p.view(batch_size, -1, self.d_model)
             out_p = self.fc_concat(out_p)
             
-            #print(topk_indices)
+            print(topk_indices)
 
+            #out = out_l+out_p
         return out_p, topk_indices
+        #if self.pruning == True:
+            #return out_p, topk_indices
+        #else: #linformer
+            #return out_l
