@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+#from torchtext.legacy.data import Dataset, BucketIterator
 from torchtext.legacy.data import Dataset, BucketIterator
-#from torchtext.data import Dataset, BucketIterator
 from model.Transformer import Transformer
 from model.Classification import CF_Transformer
 import argparse
@@ -19,7 +19,7 @@ import numpy as np
 
 
 class Train():
-    def __init__(self, gpu, opt, batch_size, n_epoch, data_pkl, model_save, learning_rate, num_warmup, hidden_dim, n_layer, n_head, ff_dim, dropout, data_task):
+    def __init__(self, gpu, batch_size, n_epoch, data_pkl, model_save, learning_rate, num_warmup, hidden_dim, n_layer, n_head, ff_dim, dropout, data_task):
 
         gpu = "cuda:"+gpu
         device = torch.device(gpu if torch.cuda.is_available() else 'cpu')  # cuda(gpu) 사용
@@ -32,7 +32,6 @@ class Train():
         saved_model = model_save
         N_EPOCHS = n_epoch
         LEARNING_RATE  = learning_rate
-        attn_option = opt
 
         SEED=42
         torch.manual_seed(SEED) # torch 
