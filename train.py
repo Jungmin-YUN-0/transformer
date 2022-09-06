@@ -303,9 +303,9 @@ class Train():
         if data_task == "MT":
             model = Transformer(INPUT_DIM, OUTPUT_DIM, SRC_PAD_IDX, TRG_PAD_IDX, HIDDEN_DIM,
                                 ENC_LAYERS, DEC_LAYERS, ENC_HEADS, DEC_HEADS,
-                                ENC_PF_DIM, DEC_PF_DIM, ENC_DROPOUT, DEC_DROPOUT, device, attn_option).to(device)
+                                ENC_PF_DIM, DEC_PF_DIM, ENC_DROPOUT, DEC_DROPOUT, device).to(device)
         elif data_task == "CF":
-            model = CF_Transformer(INPUT_DIM, OUTPUT_DIM, SRC_PAD_IDX, HIDDEN_DIM, ENC_LAYERS, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device, attn_option).to(device)
+            model = CF_Transformer(INPUT_DIM, OUTPUT_DIM, SRC_PAD_IDX, HIDDEN_DIM, ENC_LAYERS, ENC_HEADS, ENC_PF_DIM, ENC_DROPOUT, device).to(device)
         
         LEARNING_RATE = 0.0001
         ## optimizer(Adam)
