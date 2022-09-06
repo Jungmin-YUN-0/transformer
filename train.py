@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-#from torchtext.legacy.data import Dataset, BucketIterator
-from torchtext.data import Dataset, BucketIterator
+from torchtext.legacy.data import Dataset, BucketIterator
+#from torchtext.data import Dataset, BucketIterator
 from model.Transformer import Transformer
 from model.Classification import CF_Transformer
 import argparse
