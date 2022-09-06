@@ -1,5 +1,5 @@
 import torch.nn as nn
-from model.MultiHeadAttention import MultiHeadAttention, LinformerSelfAttention, CoreTokenAttention_test
+from model.MultiHeadAttention import MultiHeadAttention
 from model.FeedForward import FeedForward
 
 
